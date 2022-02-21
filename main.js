@@ -68,11 +68,11 @@ function getWebsCommand(color, light, id) {
 //WLED JSON Webserver
 router.put('/json/state', (req, res) => {
     console.log("Hyperion HTTP PUT Body:", JSON.stringify(req.body));
-    res.send(JSON.stringify(xres));
+    res.send(JSON.stringify(config.xres));
 });
 router.post('/json/state', (req, res) => {
     console.log("Hyperion HTTP POST Body:", JSON.stringify(req.body));
-    res.send(JSON.stringify(xres));
+    res.send(JSON.stringify(config.xres));
 });
 app.listen(restport, () => {
   console.log(`WLED JSON Server running on port ${restport}`);
