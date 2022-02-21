@@ -1,5 +1,6 @@
 var udp = require('dgram');
 var udpserver = udp.createSocket('udp4');
+var udp_ready = false;
 
 var network = require('network');
 var config = require('./config.js');
@@ -9,19 +10,22 @@ const bodyParser = require("body-parser");
 const router = express.Router();
 var app = express();
 //Hyperion doesn't set a content-type head on PUT requests, so we insert it.
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   req.headers['content-type'] = 'application/json';
   next();
 });
 app.use(express.json());
 app.use('/', router);
 var restport = 80;
+var webserver_ready = false
 
 var WebSocketClient = require('websocket').client;
 var wclient = new WebSocketClient();
 var globalconnection;
 var webs_ready = false;
 var webs_id = 0;
+
+var all_ready = false;
 
 config.xres.info.count = config.devices.length;
 network.get_interfaces_list((err, list) => {
@@ -55,7 +59,7 @@ arraysEqual = (arr1, arr2) => {
   return false;
 }
 
-function getWebsCommand(color, light, enable, id) {
+getWebsCommand = (color, light, enable, id) => {
   return JSON.stringify({
     "id": id,
     "type": "call_service",
@@ -70,14 +74,22 @@ function getWebsCommand(color, light, enable, id) {
   });
 }
 
+checkready = () => {
+  if(udp_ready && webs_ready && webserver_ready) {
+    all_ready = true;
+    console.log("All services ready.")
+  }
+}
+
 //WLED JSON Webserver
-router.put('/json/state', function(req, res) {
+router.put('/json/state', (req, res) => {
     console.log("Hyperion HTTP: LED State:", JSON.stringify(req.body.on));
     config.xres.state.on = req.body.on;
     config.xres.info.live = req.body.live;
     if(!config.xres.state.on && webs_ready) {
       for(var d = 0; d < config.devices.length; d++) {
-        globalconnection.send(JSON.stringify(getWebsCommand([0,0,0], config.devices[d].name, false, webs_id++)));
+        config.devices[d].color = [0,0,0];
+        globalconnection.send(JSON.stringify(getWebsCommand(config.devices[d].color, config.devices[d].name, false, webs_id++)));
       }
     }
     res.send(JSON.stringify(config.xres));
@@ -85,6 +97,8 @@ router.put('/json/state', function(req, res) {
 
 app.listen(restport, () => {
   console.log(`WLED JSON Server running on port ${restport}`);
+  webserver_ready = true;
+  checkready();
 });
 
 //Hyperion "WLED" UDP Server
@@ -111,6 +125,8 @@ udpserver.on("message", (msg, info) => {
 
 udpserver.on("listening", () => {
   console.log("Hyperion UDP Server Listening...");
+  udp_ready = true;
+  checkready();
 });
 udpserver.on('error', (err) => {
   console.log(`Hyperion UDP server error:\n${err.stack}`);
@@ -137,6 +153,7 @@ wclient.on("connect", (connection) => {
         console.log("HASS Websocket Auth Completed");
         webs_ready = true;
         globalconnection = connection;
+        checkready();
       }
     });
   }
@@ -146,7 +163,7 @@ wclient.on("error", (err) => {
   console.log(`HASS Websocket ERRER: ${JSON.stringify(err)}`);
 });
 
-wclient.on('connectFailed', function(error) {
+wclient.on('connectFailed', (error) => {
   console.log('Connect Error: ' + error.toString());
 });
 
