@@ -1,0 +1,28 @@
+{
+  "name": "wled-ha-rgb",
+  "version": "1.0.0",
+  "description": "WLED Protocol to HA light RGB settings.",
+  "main": "main.js",
+  "dependencies": {
+    "body-parser": "^1.19.2",
+    "compression": "^1.7.4",
+    "express": "^4.17.3",
+    "network": "^0.6.1",
+    "request": "^2.88.2",
+    "websocket": "^1.0.34"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whoinow/wled-ha-rgb.git"
+  },
+  "author": "Chris Adams",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/whoinow/wled-ha-rgb/issues"
+  },
+  "homepage": "https://github.com/whoinow/wled-ha-rgb#readme"
+}
