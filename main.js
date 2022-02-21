@@ -8,6 +8,11 @@ var express = require("express");
 const bodyParser = require("body-parser");
 const router = express.Router();
 var app = express();
+//Hyperion doesn't set a content-type head on PUT requests, so we insert it.
+app.use(function(req, res, next) {
+  req.headers['content-type'] = 'application/json';
+  next();
+});
 app.use(express.json());
 app.use('/', router);
 var restport = 80;
@@ -25,8 +30,8 @@ network.get_interfaces_list((err, list) => {
     for(var i = 0; i < list.length; i++) {
       var interface = list[i];
       if(interface.status == 'active') {
-        config.xres.mac = interface.mac_address.replace(/:/g,'');
-        config.xres.ip = interface.ip_address;
+        config.xres.info.mac = interface.mac_address.replace(/:/g,'');
+        config.xres.info.ip = interface.ip_address;
         console.log(`Using interface ${interface.name}, ${interface.ip_address}`);
         found = true;
         break;
@@ -50,12 +55,12 @@ arraysEqual = (arr1, arr2) => {
   return false;
 }
 
-function getWebsCommand(color, light, id) {
+function getWebsCommand(color, light, enable, id) {
   return JSON.stringify({
     "id": id,
     "type": "call_service",
     "domain": "light",
-    "service": "turn_on",
+    "service": enable ? "turn_on" : "turn_off",
     "service_data": {
       "rgb_color": color
     },
@@ -66,21 +71,25 @@ function getWebsCommand(color, light, id) {
 }
 
 //WLED JSON Webserver
-router.put('/json/state', (req, res) => {
-    console.log("Hyperion HTTP PUT Body:", JSON.stringify(req.body));
+router.put('/json/state', function(req, res) {
+    console.log("Hyperion HTTP: LED State:", JSON.stringify(req.body.on));
+    config.xres.state.on = req.body.on;
+    config.xres.info.live = req.body.live;
+    if(!config.xres.state.on && webs_ready) {
+      for(var d = 0; d < config.devices.length; d++) {
+        globalconnection.send(JSON.stringify(getWebsCommand([0,0,0], config.devices[d].name, false, webs_id++)));
+      }
+    }
     res.send(JSON.stringify(config.xres));
 });
-router.post('/json/state', (req, res) => {
-    console.log("Hyperion HTTP POST Body:", JSON.stringify(req.body));
-    res.send(JSON.stringify(config.xres));
-});
+
 app.listen(restport, () => {
   console.log(`WLED JSON Server running on port ${restport}`);
 });
 
 //Hyperion "WLED" UDP Server
 udpserver.on("message", (msg, info) => {
-  if(webs_ready && config.devices.length <= msg.length / 3) {
+  if(config.xres.state.on && webs_ready && config.devices.length <= msg.length / 3) {
     var start = 0;
     for(var d = 0; d < config.devices.length; d++) {
       var color = [];
@@ -88,11 +97,11 @@ udpserver.on("message", (msg, info) => {
       for(i = start; i < end; i++) {
         color.push(msg[i]);
       }
-      if(!arraysEqual(devices[d].color, color)) {
+      if(!arraysEqual(config.devices[d].color, color)) {
         webs_id++
         config.devices[d].color = color;
         //console.log(`Updating ID ${d}'s color, ID: ${webs_id}`);
-        var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].name, webs_id);
+        var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].name, true, webs_id);
         globalconnection.send(webscmd);
       }
       start = end;
@@ -107,7 +116,7 @@ udpserver.on('error', (err) => {
   console.log(`Hyperion UDP server error:\n${err.stack}`);
   udpserver.close();
 });
-udpserver.bind(config.xres.udpport);
+udpserver.bind(config.xres.info.udpport);
 
 //HASS Websocket Control
 wclient.on("connect", (connection) => {
@@ -131,6 +140,10 @@ wclient.on("connect", (connection) => {
       }
     });
   }
+});
+
+wclient.on("error", (err) => {
+  console.log(`HASS Websocket ERRER: ${JSON.stringify(err)}`);
 });
 
 wclient.on('connectFailed', function(error) {
