@@ -59,6 +59,13 @@ Array.prototype.equals = function(array) {
   return false;
 }
 
+// Ensuring the order in the array matches its ID which would match the Hyperion pixel index.
+var tempdevs = [...config.devices];
+config.devices = [];
+tempdevs.forEach(device => {
+  config.devices[device.id] = device;
+});
+
 getWebsCommand = (color, light, enable, id) => {
   return JSON.stringify({
     "id": id,
