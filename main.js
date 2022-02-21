@@ -47,10 +47,10 @@ network.get_interfaces_list((err, list) => {
   }
 });
 
-arraysEqual = (arr1, arr2) => {
-  if(arr1.length == arr2.length) {
-    for(var i = 0; i < arr1.length; i++) {
-      if(arr1[i] != arr2[i]) {
+Array.prototype.equals = function(array) {
+  if(this.length == array.length) {
+    for(var i = 0; i < this.length; i++) {
+      if(this[i] != array[i]) {
         return false;
       }
     }
@@ -83,16 +83,18 @@ checkready = () => {
 
 //WLED JSON Webserver
 router.put('/json/state', (req, res) => {
-    console.log("Hyperion HTTP: LED State:", JSON.stringify(req.body.on));
-    config.xres.state.on = req.body.on;
-    config.xres.info.live = req.body.live;
-    if(!config.xres.state.on && webs_ready) {
-      for(var d = 0; d < config.devices.length; d++) {
-        config.devices[d].color = [0,0,0];
-        globalconnection.send(JSON.stringify(getWebsCommand(config.devices[d].color, config.devices[d].name, false, webs_id++)));
-      }
+  if(config.debug) console.log("Hyperion HTTP:", JSON.stringify(req.body));
+  console.log("Hyperion HTTP: LED State:", JSON.stringify(req.body.on));
+  config.xres.state.on = req.body.on;
+  config.xres.info.live = req.body.live;
+  if(!config.xres.state.on && webs_ready) {
+    for(var d = 0; d < config.devices.length; d++) {
+      config.devices[d].color = [0,0,0];
+      var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].name, false, webs_id++);
+      globalconnection.send(JSON.stringify(webscmd));
     }
-    res.send(JSON.stringify(config.xres));
+  }
+  res.send(JSON.stringify(config.xres));
 });
 
 app.listen(restport, () => {
@@ -111,10 +113,10 @@ udpserver.on("message", (msg, info) => {
       for(i = start; i < end; i++) {
         color.push(msg[i]);
       }
-      if(!arraysEqual(config.devices[d].color, color)) {
+      if(!config.devices[d].color.equals(color)) {
         webs_id++
         config.devices[d].color = color;
-        //console.log(`Updating ID ${d}'s color, ID: ${webs_id}`);
+        if(config.debug) console.log(`Updating ID ${d}'s color, ID: ${webs_id}`);
         var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].name, true, webs_id);
         globalconnection.send(webscmd);
       }

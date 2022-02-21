@@ -6,6 +6,7 @@ var config = {
         host:"homeassistant.local:8123",
         token: ""
     },
+    debug: false,
     xres: {
         "state": {
             "on": true,
