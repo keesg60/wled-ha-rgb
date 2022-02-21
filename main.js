@@ -28,18 +28,25 @@ var webs_id = 0;
 var all_ready = false;
 
 config.xres.info.count = config.devices.length;
+setNetworkInfo = (interface) => {
+  config.xres.info.mac = interface.mac_address.replace(/:/g,'');
+  config.xres.info.ip = interface.ip_address;
+  console.log(`Using interface ${interface.name}, ${interface.ip_address}`);
+};
 network.get_interfaces_list((err, list) => {
   var found = false;
   if(!err) {
     for(var i = 0; i < list.length; i++) {
       var interface = list[i];
       if(interface.status == 'active') {
-        config.xres.info.mac = interface.mac_address.replace(/:/g,'');
-        config.xres.info.ip = interface.ip_address;
-        console.log(`Using interface ${interface.name}, ${interface.ip_address}`);
+        setNetworkInfo(interface);
         found = true;
         break;
       }
+    }
+    if(!found) {
+      setNetworkInfo(list[0]);
+      found = true;
     }
   }
   if(!found) {
