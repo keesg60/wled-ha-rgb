@@ -74,7 +74,7 @@ tempdevs.forEach(device => {
 });
 
 getWebsCommand = (color, light, enable, id) => {
-  return JSON.stringify({
+  var ret = JSON.stringify({
     "id": id,
     "type": "call_service",
     "domain": "light",
@@ -86,6 +86,8 @@ getWebsCommand = (color, light, enable, id) => {
       "entity_id": light
     }
   });
+  if(config.debug) console.log(`WEBS Command: "${ret}"`);
+  return ret;
 }
 
 checkready = () => {
@@ -105,7 +107,7 @@ router.put('/json/state', (req, res) => {
     for(var d = 0; d < config.devices.length; d++) {
       config.devices[d].color = [0,0,0];
       var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].name, false, webs_id++);
-      globalconnection.send(JSON.stringify(webscmd));
+      globalconnection.send(webscmd);
     }
   }
   res.send(JSON.stringify(config.xres));
@@ -130,7 +132,7 @@ udpserver.on("message", (msg, info) => {
       if(!config.devices[d].color.equals(color)) {
         webs_id++
         config.devices[d].color = color;
-        if(config.debug) console.log(`Updating ID ${d}'s color, ID: ${webs_id}`);
+        if(config.debug) console.log(`Updating ID ${d}'s color, ID: ${webs_id}, Color: ${config.devices[d].color}`);
         var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].name, true, webs_id);
         globalconnection.send(webscmd);
       }
@@ -157,6 +159,7 @@ wclient.on("connect", (connection) => {
     connection.on("message", (msg) => {
       var message = JSON.parse(msg.utf8Data);
       var rmsg;
+      //if(config.debug) console.log(`WEBS MESSAGE:`, message);
       if(message.type == "auth_required") {
         console.log("HASS Websocket Auth requested...");
         rmsg = JSON.stringify({
