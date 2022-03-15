@@ -73,20 +73,52 @@ tempdevs.forEach(device => {
   config.devices[device.id] = device;
 });
 
+getBrightness = (color) => {
+  var ret = [];
+  var bc = config.brightness_calcs[config.brightness_calc];
+  if(bc.maj) {
+    if(bc.maj == "sqrt") {
+      if(bc.min) {
+        var r = eval(`(${color[0]} * ${bc.r})${bc.min}`);
+        var g = eval(`(${color[1]} * ${bc.g})${bc.min}`);
+        var b = eval(`(${color[2]} * ${bc.b})${bc.min}`);
+        if(config.debug) console.log(`Color derived brightness: r: ${r}, g:${g}, b:${b}`);
+        ret = Math.sqrt(r + g + b);
+      }
+      else {
+        ret = Math.sqrt((color[0] * bc.r) + color[1] * bc.g + color[2] * b);
+      }
+    }
+    else if(bc.maj == "avg") {
+      ret = ((color[0] + color[1] + color[2]) / 3);
+    }
+  }
+  else {
+    ret = ((color[0] * bc.r) + color[1] * bc.g + (color[2] * bc.b));
+  }
+  return ret;
+}
+
 getWebsCommand = (color, light, enable, id) => {
+  var brightness = getBrightness(color);
   var ret = JSON.stringify({
     "id": id,
     "type": "call_service",
     "domain": "light",
     "service": enable ? "turn_on" : "turn_off",
     "service_data": {
-      "rgb_color": color
+      "rgb_color": color,
+      //"brightness": (color[0] + color[1] + color[2]) / 3
+      "brightness": brightness
     },
     "target": {
       "entity_id": light
     }
   });
-  if(config.debug) console.log(`WEBS Command: "${ret}"`);
+  if(config.debug) {
+    if(config.debug) console.log("Brightness:", brightness);
+    console.log(`WEBS Command: "${ret}"`);
+  }
   return ret;
 }
 
