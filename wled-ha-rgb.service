@@ -1,0 +1,15 @@
+[Service]
+ExecStart=/usr/bin/node /home/pi/wled-ha-rgb/main.js
+# Required on some systems
+WorkingDirectory=/home/pi/wled-ha-rgb/
+Restart=always
+ # Restart service after 10 seconds if node service crashes
+ RestartSec=120
+ # Output to syslog
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=wled-ha-rgb
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
