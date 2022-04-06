@@ -14,6 +14,7 @@ var config = {
     },
     brightness_calc: "bt709",
     debug: false,
+    rest_port: 8989,
     xres: {
         "state": {
             "on": false,

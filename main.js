@@ -16,7 +16,6 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 app.use('/', router);
-var restport = 80;
 var webserver_ready = false
 
 var WebSocketClient = require('websocket').client;
@@ -145,8 +144,8 @@ router.put('/json/state', (req, res) => {
   res.send(JSON.stringify(config.xres));
 });
 
-app.listen(restport, () => {
-  console.log(`WLED JSON Server running on port ${restport}`);
+app.listen(config.rest_port, () => {
+  console.log(`WLED JSON Server running on port ${config.rest_port}`);
   webserver_ready = true;
   checkready();
 });
