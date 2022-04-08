@@ -1,3 +1,5 @@
+var version = "1.0.0";
+
 var udp = require('dgram');
 var udpserver = udp.createSocket('udp4');
 var udp_ready = false;
@@ -124,7 +126,7 @@ getWebsCommand = (color, light, enable, id) => {
 checkready = () => {
   if(udp_ready && webs_ready && webserver_ready) {
     all_ready = true;
-    console.log("All services ready.")
+    console.log("All services ready.");
   }
 }
 
@@ -218,3 +220,4 @@ wclient.on('connectFailed', (error) => {
 });
 
 wclient.connect(`ws://${config.hass.host}/api/websocket`);
+console.log(`Version: ${version}`);

@@ -6,15 +6,15 @@ var config = {
         host:"homeassistant.local:8123",
         token: ""
     },
+    brightness_calc: "bt709",
+    debug: false,
+    rest_port: 8989,
     brightness_calcs: {
         "bt709": { maj: null, min: null, r: 0.2126, g: 0.7152, b:0.0722 },
         "bt601": { maj: null, min: null, r: 0.299, g: 0.587, b: 0.114 },
         "hsp": { maj: "sqrt", min: "^2", r: 0.299, g: 0.587, b: 0.114 },
         "avg": { maj: "avg" }
     },
-    brightness_calc: "bt709",
-    debug: false,
-    rest_port: 8989,
     xres: {
         "state": {
             "on": false,
