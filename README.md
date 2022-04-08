@@ -1,4 +1,4 @@
-# WLED Receiver for HomeAssistant RGB LED Control
+# WLED Receiver for HomeAssistant RGB LED Control v1.0.0
 ----
 This small server allows you to accept WLED ([Aircookie](https://github.com/Aircoookie/WLED)) data and convert it to control HomeAssistant RGB LEDs. This was mainly developed to allow Hyperion(HyperHDR) HDMI Amiblighting to control LEDs in HomeAssistant.
 
