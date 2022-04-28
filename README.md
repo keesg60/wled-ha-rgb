@@ -64,3 +64,5 @@ A linux systemctl service file is included in the repo as well. For running it a
 3. Run this command: `sudo systemctl start wled-ha-rgb`
 4. And then this to make sure it starts with the system: `sudo systemctl enable wled-has-rgb`
 
+## Hyperion Setup
+Setup is like a normal WLED LED Instance. Configure the LEDs for the space you want to sample from. Then just make note of the LED IDs for the config of this server. Also a major note is to make sure when you enter the `Target IP/Hostname` that include the port. EX: `192.168.1.11:8989`
