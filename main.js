@@ -139,8 +139,10 @@ router.put('/json/state', (req, res) => {
   if(!config.xres.state.on && webs_ready) {
     for(var d = 0; d < config.devices.length; d++) {
       config.devices[d].color = [0,0,0];
-      var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].entity, false, webs_id++);
-      globalconnection.send(webscmd);
+      for(entity of config.devices[d].entities) {
+        var webscmd = getWebsCommand(config.devices[d].color, entity, false, webs_id++);
+        globalconnection.send(webscmd);
+      }
     }
   }
   res.send(JSON.stringify(config.xres));
@@ -166,8 +168,10 @@ udpserver.on("message", (msg, info) => {
         webs_id++
         config.devices[d].color = color;
         if(config.debug) console.log(`Updating ID ${d}'s color, ID: ${webs_id}, Color: ${config.devices[d].color}`);
-        var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].entity, true, webs_id);
-        globalconnection.send(webscmd);
+        for(entity of config.devices[d].entities) {
+          var webscmd = getWebsCommand(config.devices[d].color, entity, true, webs_id);
+          globalconnection.send(webscmd);
+        }
       }
       start = end;
     }

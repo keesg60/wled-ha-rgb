@@ -1,6 +1,6 @@
 var config = {
     devices: [
-        {id: 0, entity: "hass.light.entityname", color: [0,0,0] }
+        {id: 0, entities: [ "hass.light.entityname" ], color: [0,0,0] }
     ],
     hass: {
         host:"homeassistant.local:8123",
