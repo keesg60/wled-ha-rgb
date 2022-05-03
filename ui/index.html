@@ -15,6 +15,7 @@
             Debug Logging: <input id="debug" type="checkbox"></input><BR>
             HomeAssistant Host: <input id="hass_host" type="text" value="homeassistant.local:8123"></input><BR>
             HomeAssistant Token: <input id="hass_token" type="text" value=""></input><BR>
+            
             <label for="cars">Brightness Calculation:</label>
 
             <select name="bcalcs" id="bcalcs">
@@ -22,10 +23,12 @@
                 <option value="bt601">bt601</option>
                 <option value="hsp">hsp</option>
                 <option value="avg">Average</option>
-            </select>
+            </select><BR>
+            <button id="get_entities">Get Entities</button><BR><BR>
         </div>
         <button id="add_device_btn">Add Device</button>
-        <div id="device_container"></div>
-        <button id="send_config">Send Config and Restart</button>
+        <div id="device_container"></div><BR>
+        <button id="send_config">Send Config and Restart</button><BR>
+        <span id="log"></span>
     </body>
 </html>

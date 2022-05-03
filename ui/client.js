@@ -1,12 +1,18 @@
 var device_counter = 0;
+var entities = [];
 document.onreadystatechange = () => {
     if (document.readyState == 'complete') {
         getConfig();
         var add_device_btn = document.getElementById("add_device_btn");
         
         add_device_btn.onclick = (e) => {
-            buildDevice();
+            buildDevice("", true);
         }
+
+        var get_entities_btn = document.getElementById("get_entities");
+        get_entities_btn.onclick = (e) => {
+            getEntities();
+        };
 
         var send_config_btn = document.getElementById("send_config");
         send_config_btn.onclick = (e) => {
@@ -21,7 +27,7 @@ document.onreadystatechange = () => {
             config.rest_port= parseInt(document.getElementById("wled_http_port").value);
             config.debug = document.getElementById("debug").checked;
             
-            var device_inps = document.getElementsByTagName("input");
+            var device_inps = document.getElementsByTagName("select");
             config.devices = [];
             for(didx in device_inps) {
                 var device_inp = device_inps[didx];
@@ -36,19 +42,19 @@ document.onreadystatechange = () => {
                 }
 
             }
-            sendcommand("setconfig", config);
+            setConfig("setconfig", config);
         }
     }
 }
 
-function sendcommand(cmd, data) {
+function setConfig(cmd, data) {
     var xhr = new XMLHttpRequest();
     var endpoint = `http://${window.location.hostname}:${window.location.port}/${cmd}`;
     xhr.open("POST", endpoint, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.addEventListener('readystatechange', (ev) => {
         if(xhr.readyState == 4) {
-            //document.getElementById('logging').innerHTML += xhr.responseText + '<BR>';
+            document.getElementById('log').innerHTML += xhr.responseText + '<BR>';
         }
     });
     xhr.send(JSON.stringify(data));
@@ -66,28 +72,69 @@ function getConfig() {
             document.getElementById("bcalcs").value = config.brightness_calc;
             document.getElementById("wled_http_port").value =  config.rest_port;
             document.getElementById("debug").checked = config.debug;    
-
-            for(d in config.devices)
-            {
-                buildDevice(config.devices[d].entity);
-            }
+            document.getElementById("hass_token").value = config.hass.token;    
+            getEntities(config.devices);
         }
     });
     xhr.send();
 }
 
-function buildDevice(value = "") {
+function getEntities(devices = null) {
+    document.getElementById('log').innerHTML += 'HASS Entities Retrieval...<BR>';
+    var xhr = new XMLHttpRequest();
+    var endpoint = `http://${window.location.hostname}:${window.location.port}/getentities`;
+    xhr.open("POST", endpoint, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.addEventListener('readystatechange', (ev) => {
+        if(xhr.readyState == 4) {
+            document.getElementById('log').innerHTML += 'HASS Entities Retrieved!<BR>';
+            entities = JSON.parse(xhr.responseText);
+            if(entities.length > 0) {
+                if(devices) {
+                    for(d in devices)
+                    {
+                        buildDevice(devices[d].entity, true);
+                    }
+                }
+            }
+        }
+    });
+    var hassconfig = {
+        host: document.getElementById("hass_host").value,
+        token: document.getElementById("hass_token").value
+    };
+    xhr.send(JSON.stringify(hassconfig));
+}
+
+function buildDevice(value = "", pulldown = false) {
     var device_container = document.getElementById("device_container");
     var label = document.createElement("span");
     label.id = `entity_label_${device_counter}`;
     label.innerHTML = `LED ID: ${device_counter}, HASS Entity `
     device_container.appendChild(label);
     
-    var new_device_inp = document.createElement("input");
-    new_device_inp.id = `entity_inp_${device_counter}`;
-    new_device_inp.type = "text";
-    new_device_inp.value = value;
-    device_container.appendChild(new_device_inp);
+    if(!pulldown) {
+        var new_device_inp = document.createElement("input");
+        new_device_inp.id = `entity_inp_${device_counter}`;
+        new_device_inp.type = "text";
+        new_device_inp.value = value;
+        device_container.appendChild(new_device_inp);
+    }
+    else {
+        //if(document.getElementById(`entity_select_${}`))
+        var new_device_inp = document.createElement("select");
+        new_device_inp.id = `entity_inp_${device_counter}`;
+        new_device_inp.name = `entity_inp_${device_counter}`;
+        var select = device_container.appendChild(new_device_inp);
+        for(e in entities) {
+            var entity = entities[e];
+            var option = document.createElement("option");
+            option.value = entity;
+            option.innerHTML = entity;
+            select.appendChild(option);
+        }
+        select.value = value;
+    }
 
     var new_device_del_btn = document.createElement("button");
     new_device_del_btn.id = `entity_del_btn_${device_counter}`;
