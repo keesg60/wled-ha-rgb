@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <script type="text/javascript" src="client.js"></script>
+    </head>
+    <body>
+        <!-- 
+            device config
+            hass config
+            WLED http port config
+            brightness calc
+            debug
+        -->
+        <div id="static_items">
+            WLED HTTP Port: <input id="wled_http_port" type="text" value="8989"></input><BR>
+            Debug Logging: <input id="debug" type="checkbox"></input><BR>
+            HomeAssistant Host: <input id="hass_host" type="text" value="homeassistant.local:8123"></input><BR>
+            HomeAssistant Token: <input id="hass_token" type="text" value=""></input><BR>
+            <label for="cars">Brightness Calculation:</label>
+
+            <select name="bcalcs" id="bcalcs">
+                <option value="bt709">bt709</option>
+                <option value="bt601">bt601</option>
+                <option value="hsp">hsp</option>
+                <option value="avg">Average</option>
+            </select>
+        </div>
+        <button id="add_device_btn">Add Device</button>
+        <div id="device_container"></div>
+        <button id="send_config">Send Config and Restart</button>
+    </body>
+</html>

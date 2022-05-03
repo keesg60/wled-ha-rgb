@@ -1,7 +1,7 @@
 [Service]
-ExecStart=/usr/bin/node /home/pi/wled-ha-rgb/main.js
+ExecStart=/usr/bin/node /home/pi/wled-ha-rgb/ui/server.js
 # Required on some systems
-WorkingDirectory=/home/pi/wled-ha-rgb/
+WorkingDirectory=/home/pi/wled-ha-rgb/ui/
 Restart=always
  # Restart service after 10 seconds if node service crashes
  RestartSec=120
