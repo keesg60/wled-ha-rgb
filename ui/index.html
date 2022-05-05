@@ -1,35 +1,73 @@
 <html>
     <head>
         <script type="text/javascript" src="client.js"></script>
+        <style>
+            .centered {
+                margin-left:auto; 
+                margin-right:auto; 
+                text-align: center;
+            }
+            .centered-text-start {
+                margin-left:auto; 
+                margin-right:auto; 
+                text-align: start;
+            }
+            .border-centered {
+                border:2px solid white;
+                margin-left:auto;
+                margin-right:auto;
+                text-align: center;
+            }
+            h1 {
+                text-align: center;
+            }
+            .appwidth {
+                width:600px;
+            }
+            .text-input {
+                width:300px;
+            }
+        </style>
     </head>
-    <body>
-        <!-- 
-            device config
-            hass config
-            WLED http port config
-            brightness calc
-            debug
-        -->
-        <div id="static_items">
+    <body style="background-color:#292828; color: white; ">
+        <div id="parent_container">
             <h1>WLED to HomeAssistant RGB Bulb Bridge</h1>
-            WLED HTTP Port: <input id="wled_http_port" type="text" value="8989"></input><BR>
-            Debug Logging: <input id="debug" type="checkbox"></input><BR>
-            HomeAssistant Host: <input id="hass_host" type="text" value="homeassistant.local:8123"></input><BR>
-            HomeAssistant Token: <input id="hass_token" type="text" value=""></input><BR>
+            <div id="static_items" class="border-centered appwidth">
+                <h2>Config</h2>
+                <table style="margin-left:auto; margin-right:auto;">
+                    <tr><td>WLED HTTP Port:</td><td> <input id="wled_http_port" type="text" value="8989" class="text-input"></input></td></tr>
+                    <tr><td>Debug Logging:</td> <td><input id="debug" type="checkbox"></input></td></tr>
+                    <tr><td>HomeAssistant Host:</td> <td><input id="hass_host" type="text" value="homeassistant.local:8123" class="text-input"></input></td></tr>
+                    <tr><td>HomeAssistant Token:</td> <td><input id="hass_token" type="text" value="" class="text-input"></input></td></tr>
+                
+                    <tr>
+                        <td><label for="cars">Brightness Calculation:</label></td>
+                        <td>
+                            <select name="bcalcs" id="bcalcs">
+                                <option value="bt709">bt709</option>
+                                <option value="bt601">bt601</option>
+                                <option value="hsp">hsp</option>
+                                <option value="avg">Average</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table><BR><BR>
+                <button id="get_entities">Get Entities</button><BR><BR  >
+            </div>
             
-            <label for="cars">Brightness Calculation:</label>
-
-            <select name="bcalcs" id="bcalcs">
-                <option value="bt709">bt709</option>
-                <option value="bt601">bt601</option>
-                <option value="hsp">hsp</option>
-                <option value="avg">Average</option>
-            </select><BR>
-            <button id="get_entities">Get Entities</button><BR><BR>
+            <div id="device_container_parent" class="border-centered appwidth">
+                <h2>Hyperion LED to HASS Map</h2>
+                <button id="add_device_btn">Add Device</button><BR><BR>
+                <div id="device_container">Loading Config...</div><BR>
+            </div>
+            <BR>
+            <div id="send_config_container" class="centered">
+                <button id="send_config" >Send Config and Restart</button><BR><BR>
+            </div>
         </div>
-        <button id="add_device_btn">Add Device</button>
-        <div id="device_container"></div><BR>
-        <button id="send_config">Send Config and Restart</button><BR>
-        <span id="log"></span>
+        <div id="log_header_container" class="centered-text-start appwidth">
+            <h3>Log:</h3>
+        </div>
+        <div id="log" class="appwidth border-centered" style="text-align:start;"></div>
     </body>
 </html>

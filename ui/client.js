@@ -1,11 +1,17 @@
 var device_counter = 0;
 var entities = [];
+var config = [];
 document.onreadystatechange = () => {
     if (document.readyState == 'complete') {
         getConfig();
         var add_device_btn = document.getElementById("add_device_btn");
         
         add_device_btn.onclick = (e) => {
+            
+            if(device_counter == 0) {
+                var device_container = document.getElementById("device_container");
+                device_container.innerHTML = "";
+            }
             buildDevice("", true);
         }
 
@@ -34,9 +40,12 @@ document.onreadystatechange = () => {
                 if(device_inp.id && device_inp.id.indexOf("entity_inp") != -1)
                 {  
                     var id = parseInt(device_inp.id.split(/_/g)[2]);
+
+                    var matched_entity = getEntityName(device_inp.value);
+
                     config.devices.push({
                         id: id,
-                        entity: device_inp.value,
+                        entity: matched_entity,//device_inp.value,
                         color: [0,0,0]
                     })
                 }
@@ -47,54 +56,98 @@ document.onreadystatechange = () => {
     }
 }
 
-function setConfig(cmd, data) {
+setConfig = (cmd, data) => {
+    addLog("Setting Config...")
     var xhr = new XMLHttpRequest();
     var endpoint = `http://${window.location.hostname}:${window.location.port}/${cmd}`;
     xhr.open("POST", endpoint, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.addEventListener('readystatechange', (ev) => {
         if(xhr.readyState == 4) {
-            document.getElementById('log').innerHTML += xhr.responseText + '<BR>';
+            addLog(xhr.responseText + '<BR>');
         }
     });
     xhr.send(JSON.stringify(data));
 }
 
-function getConfig() {
+getConfig = () => {
+    addLog("Config Retrieval...");
     var xhr = new XMLHttpRequest();
     var endpoint = `http://${window.location.hostname}:${window.location.port}/getconfig`;
     xhr.open("GET", endpoint, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.addEventListener('readystatechange', (ev) => {
         if(xhr.readyState == 4) {
-            var config = JSON.parse(xhr.responseText);
+            addLog("Config Retrieved!");
+            config = JSON.parse(xhr.responseText);
 
             document.getElementById("bcalcs").value = config.brightness_calc;
             document.getElementById("wled_http_port").value =  config.rest_port;
             document.getElementById("debug").checked = config.debug;    
             document.getElementById("hass_token").value = config.hass.token;    
-            getEntities(config.devices);
+            getEntities();
         }
     });
     xhr.send();
 }
 
-function getEntities(devices = null) {
-    document.getElementById('log').innerHTML += 'HASS Entities Retrieval...<BR>';
+getFriendlyName = (entity) => {
+    for(var e = 0; e < entities.length; e++) {
+        if(entities[e].entity == entity) {
+            return entities[e].friendly_name;
+        }
+    }
+}
+
+getEntityName = (friendly_name) => {
+    for(var i = 0; i < entities.length; i++) {
+        if(entities[i].friendly_name == friendly_name) {
+            return entities[i].entity;
+        }
+    }
+}
+
+addLog = (text) => {
+    var log_container = document.getElementById('log');
+    log_container.innerHTML += text + "<BR>";
+}
+
+getEntities = () => {
+    addLog("HASS Entities Retrieval...");
     var xhr = new XMLHttpRequest();
     var endpoint = `http://${window.location.hostname}:${window.location.port}/getentities`;
     xhr.open("POST", endpoint, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
+    
     xhr.addEventListener('readystatechange', (ev) => {
         if(xhr.readyState == 4) {
-            document.getElementById('log').innerHTML += 'HASS Entities Retrieved!<BR>';
             entities = JSON.parse(xhr.responseText);
+            var device_container = document.getElementById("device_container");
             if(entities.length > 0) {
-                if(devices) {
-                    for(d in devices)
+                addLog("HASS Entities Retrieved!");
+                device_container.innerHTML = "";
+                device_counter = 0; 
+                if(config.devices) {
+                    var device_found = false;
+                    for(d in config.devices)
                     {
-                        buildDevice(devices[d].entity, true);
+                        var entity = config.devices[d].entity;
+                        if(entity != "") { 
+                            var friendly_name = getFriendlyName(entity);
+                            buildDevice(friendly_name, true);
+                            device_found = true;
+                        }
                     }
+                }
+            }
+            else
+            {
+                addLog("No entities retrieved. Check HASS config here and HASS for compatible lights.");
+            }
+            if(!device_found) {
+                device_container.innerHTML = "No devices configured."
+                for(var e = 0; e < entities; e++) {
+                    buildDevice("", true);
                 }
             }
         }
@@ -106,11 +159,11 @@ function getEntities(devices = null) {
     xhr.send(JSON.stringify(hassconfig));
 }
 
-function buildDevice(value = "", pulldown = false) {
+buildDevice = (value = "", pulldown = false) => {
     var device_container = document.getElementById("device_container");
     var label = document.createElement("span");
     label.id = `entity_label_${device_counter}`;
-    label.innerHTML = `LED ID: ${device_counter}, HASS Entity `
+    label.innerHTML = `LED ID: ${device_counter} - HASS Light `
     device_container.appendChild(label);
     
     if(!pulldown) {
@@ -121,7 +174,6 @@ function buildDevice(value = "", pulldown = false) {
         device_container.appendChild(new_device_inp);
     }
     else {
-        //if(document.getElementById(`entity_select_${}`))
         var new_device_inp = document.createElement("select");
         new_device_inp.id = `entity_inp_${device_counter}`;
         new_device_inp.name = `entity_inp_${device_counter}`;
@@ -129,8 +181,8 @@ function buildDevice(value = "", pulldown = false) {
         for(e in entities) {
             var entity = entities[e];
             var option = document.createElement("option");
-            option.value = entity;
-            option.innerHTML = entity;
+            option.value = entity.friendly_name;
+            option.innerHTML = entity.friendly_name;
             select.appendChild(option);
         }
         select.value = value;

@@ -51,7 +51,7 @@ router.post('/setconfig', (req, res) => {
     }
     wled_ha_rgb.events.removeAllListeners();
     wled_ha_rgb.events.on("allready", (data) => {
-        res.send("Config set!");
+        res.send("Server restarted with new config!");
     });
 });
 
@@ -117,7 +117,7 @@ getEntities = (res) => {
                             (k.attributes.color_mode == 'rgb' || 
                             (k.attributes.supported_color_modes && k.attributes.supported_color_modes.indexOf("rgb") > -1)))
                             {
-                                entities.push(k.entity_id);
+                                entities.push({friendly_name:k.attributes.friendly_name, entity: k.entity_id});
                             }
                         });
                         res.send(JSON.stringify(entities));

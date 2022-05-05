@@ -8,6 +8,8 @@ This most likely will be ported to a HASS integration in the future.
 
 ----
 
+![Alt text](/screenshot.png?raw=true "Optional Title")
+
 ## Config
 
 
@@ -65,4 +67,4 @@ A linux systemctl service file is included in the repo as well. For running it a
 4. And then this to make sure it starts with the system: `sudo systemctl enable wled-has-rgb`
 
 ## Hyperion Setup
-Setup is like a normal WLED LED Instance. Configure the LEDs for the space you want to sample from. Then just make note of the LED IDs for the config of this server. Also a major note is to make sure when you enter the `Target IP/Hostname` that include the port. EX: `192.168.1.11:8989`
+Setup is like a normal WLED LED Instance. Configure the LEDs for the space you want to sample from. Then just make note of the LED IDs for the config of this server. Also a major note is to make sure when you enter the `Target IP/Hostname`, it includes the port. EX: `192.168.1.11:8989`
