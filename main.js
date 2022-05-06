@@ -74,8 +74,7 @@ getBrightness = (color) => {
   return ret;
 }
 
-getWebsCommand = (color, light, enable, id) => {
-  var brightness = getBrightness(color);
+getWebsCommand = (color, light, brightness, enable, id) => {
   var ret = JSON.stringify({
     "id": id,
     "type": "call_service",
@@ -115,12 +114,20 @@ bindWebserver = () => {
   router.put('/json/state', (req, res) => {
     if(config.debug) console.log("Hyperion HTTP:", JSON.stringify(req.body));
     console.log("Hyperion HTTP: LED State:", JSON.stringify(req.body.on));
+
+    var stateconfig_file = path.join("..", "config.json");
+    var config_string = fs.readFileSync(stateconfig_file);
+    stateconfig = JSON.parse(config_string);
+    stateconfig.xres.state.on = req.body.on;
+    fs.writeFileSync(stateconfig_file, JSON.stringify(stateconfig));
+
     config.xres.state.on = req.body.on;
     config.xres.info.live = req.body.live;
     if(!config.xres.state.on && webs_ready) {
       for(var d = 0; d < config.devices.length; d++) {
         config.devices[d].color = [0,0,0];
-        var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].entity, false, webs_id++);
+        config.devices[d].brightness = getBrightness(config.devices[d].color);
+        var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].entity, config.devices[d].brightness, false, webs_id++);
         globalconnection.send(webscmd);
       }
     }
@@ -142,9 +149,14 @@ bindUDPserver = () => {
         if(!config.devices[d].color.equals(color)) {
           webs_id++
           config.devices[d].color = color;
-          if(config.debug) console.log(`Updating ID ${d}'s color, ID: ${webs_id}, Color: ${config.devices[d].color}`);
-          var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].entity, true, webs_id);
+          config.devices[d].brightness = getBrightness(config.devices[d].color);
+          if(config.debug) console.log(`Updating ID ${d}'s color, ID: ${webs_id}, Color: ${config.devices[d].color}, Brightness: ${config.devices[d].brightness}`);
+          
+          var webscmd = getWebsCommand(config.devices[d].color, config.devices[d].entity, config.devices[d].brightness, true, webs_id);
           globalconnection.send(webscmd);
+          if(config.debug) {
+            sendEvent("entitydata", {devices: config.devices})
+          }
         }
         start = end;
       }
@@ -269,6 +281,7 @@ main = () => {
   wclient.connect(`ws://${config.hass.host}/api/websocket`);
 
   console.log(`Version: ${version}`);
+  console.log("Hyperion HTTP: LED State:", JSON.stringify(config.xres.state.on));
 }
 
 shutdown = () => {

@@ -1,6 +1,7 @@
 var device_counter = 0;
 var entities = [];
 var config = [];
+var websocket = null;
 document.onreadystatechange = () => {
     if (document.readyState == 'complete') {
         getConfig();
@@ -65,6 +66,7 @@ setConfig = (cmd, data) => {
     xhr.addEventListener('readystatechange', (ev) => {
         if(xhr.readyState == 4) {
             addLog(xhr.responseText + '<BR>');
+            showDebug(data.debug);
         }
     });
     xhr.send(JSON.stringify(data));
@@ -84,7 +86,10 @@ getConfig = () => {
             document.getElementById("bcalcs").value = config.brightness_calc;
             document.getElementById("wled_http_port").value =  config.rest_port;
             document.getElementById("debug").checked = config.debug;    
-            document.getElementById("hass_token").value = config.hass.token;    
+            document.getElementById("hass_token").value = config.hass.token;
+
+            showDebug(config.debug);
+
             getEntities();
         }
     });
@@ -110,6 +115,33 @@ getEntityName = (friendly_name) => {
 addLog = (text) => {
     var log_container = document.getElementById('log');
     log_container.innerHTML += text + "<BR>";
+}
+
+showDebug = (show) => {
+    var debug_container = document.getElementById("debug_container");
+    debug_container.className = show ? "shown border-centered appwidth" : "hidden";
+    websCB = (event) => {
+        var data = JSON.parse(event.data);
+        var log = "";
+        debug_container.innerHTML = "";
+        data.devices.forEach((k,v) => {
+            log += `<tr><td>${getFriendlyName(k.entity)}</td> <td>${k.color}</td><td>${k.brightness}</td></tr>`;
+        });
+        debug_container.innerHTML = `Debug Data:<BR><table><tr><th style="width:200px; text-align:start;">Device</th><th style="width:100px; text-align:start;">RGB</th><th style="width:200px; text-align:start;">Brightness</th></tr>${log}</table>`;
+    }
+    if(show) {
+        const websocket = new WebSocket(`ws://${window.location.hostname}:3298`);
+        websocket.addEventListener("open", function (event) {
+            console.log("Socket opened.");
+        });
+        websocket.addEventListener("message", websCB);
+    }
+    else {
+        if(websocket) {
+            websocket.close();
+            websocket.removeEventListener("message", websCB);
+        }
+    }
 }
 
 getEntities = () => {

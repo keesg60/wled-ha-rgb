@@ -27,6 +27,12 @@
             .text-input {
                 width:300px;
             }
+            .hidden {
+                display:none
+            }
+            .shown {
+                display:block;
+            }
         </style>
     </head>
     <body style="background-color:#292828; color: white; ">
@@ -61,6 +67,7 @@
                 <div id="device_container">Loading Config...</div><BR>
             </div>
             <BR>
+            <div id="debug_container" class="hidden"></div>
             <div id="send_config_container" class="centered">
                 <button id="send_config" >Send Config and Restart</button><BR><BR>
             </div>

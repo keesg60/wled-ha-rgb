@@ -24,8 +24,14 @@ router.get('/client.js', (req, res) => {
 var config = {};
 
 var WebSocketClient = require('websocket').client;
+var WebSocketServer = require('websocket').server;
 var wclient = new WebSocketClient();
-var globalconnection;
+var wserver = new WebSocketServer();
+var wserver_started = false;
+var wshttpserver = null;
+
+var globalconnectionc;
+var globalconnections;
 var webs_id = 0;
 
 router.post('/setconfig', (req, res) => {
@@ -42,6 +48,8 @@ router.post('/setconfig', (req, res) => {
     config.rest_port =  req.body.rest_port;
     var set_config_string = JSON.stringify(config);
     fs.writeFileSync(config_path, set_config_string);
+
+    startWSServer(config.debug);    
     
     if(wled_ha_rgb.running) {
         wled_ha_rgb.restart();
@@ -101,7 +109,7 @@ getEntities = (res) => {
                     if(message.type == "auth_ok") {
                         console.log("Server: HASS Websocket Auth Completed");
                         webs_ready = true;
-                        globalconnection = connection;
+                        globalconnectionc = connection;
                         var req = JSON.stringify({
                             id: ++webs_id,
                             type: "get_states"
@@ -144,4 +152,67 @@ getEntities = (res) => {
     }
 }
 
+startWSServer = (start) => {
+    entityDataCB = (data) => {
+        if(globalconnections) {
+            globalconnections.sendUTF(JSON.stringify(data));
+        }
+    }
+    if(start && !wserver_started) {
+        wserver_started = true;
+        var http = require('http');
+
+        wshttpserver = http.createServer(function(request, response) {
+            console.log((new Date()) + ' Received request for ' + request.url);
+            response.writeHead(404);
+            response.end();
+        });
+        wshttpserver.listen(3298, function() {
+            console.log("Debug Websocket Server started on port 3298");
+        });
+
+        wserver.mount({httpServer: wshttpserver, autoAcceptConnections: true});
+
+        wserver.on("error", function(err) {
+            console.log(err);
+        });
+        
+        wserver.on("connect", function(connection) {
+            
+            connection.on('message', function(message) {
+                console.log(message);
+            });
+            wled_ha_rgb.events.on("entitydata", entityDataCB);
+            
+            globalconnections = connection;
+        });
+        wserver.on("close", function(e) {
+            wled_ha_rgb.events.removeListener("entitydata", entityDataCB);
+        });
+        wserver.on('request', function(request) {
+            var connection = request.accept('echo-protocol', request.origin);
+            console.log((new Date()) + ' Connection accepted.');
+            connection.on('message', function(message) {
+                console.log(message);
+            });
+        });
+    }
+    else {
+        if(wserver && wshttpserver) {
+            wserver_started = false;
+            wserver.removeAllListeners();
+            wserver.unmount();
+            wserver.shutDown();
+            if(globalconnections) {
+                globalconnections.removeAllListeners();
+                globalconnections.close();
+            }
+            wserver.closeAllConnections();
+            wshttpserver.close();
+        }
+    }
+}
 getConfig();
+wled_ha_rgb.main();
+startWSServer(config.debug);
+
