@@ -101,7 +101,7 @@ checkready = () => {
     all_ready = true;
     module.exports.running = true;
     console.log("All services ready.");
-    sendEvent("allready", null);
+    sendEvent("allready", config.debug);
   }
 }
 

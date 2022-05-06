@@ -49,7 +49,7 @@ router.post('/setconfig', (req, res) => {
     var set_config_string = JSON.stringify(config);
     fs.writeFileSync(config_path, set_config_string);
 
-    startWSServer(config.debug);    
+       
     
     if(wled_ha_rgb.running) {
         wled_ha_rgb.restart();
@@ -60,6 +60,7 @@ router.post('/setconfig', (req, res) => {
     wled_ha_rgb.events.removeAllListeners();
     wled_ha_rgb.events.on("allready", (data) => {
         res.send("Server restarted with new config!");
+        startWSServer(data); 
     });
 });
 
