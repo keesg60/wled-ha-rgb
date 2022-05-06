@@ -43,8 +43,8 @@ Installing on your Hyperion instance (RPi etc) is a matter of copying the files 
 A linux systemctl service file is included in the repo as well. For running it as a service on Windows, google is your friend (sorry, I'm lazy).
 
 1. Modify these locations to where you plan to copy the server to in `wled-ha-rgb.service`:
-   * `ExecStart=/usr/bin/node /home/pi/wled-ha-rgb/main.js`
-   * `WorkingDirectory=/home/pi/wled-ha-rgb/`
+   * `ExecStart=/usr/bin/node /home/pi/wled-ha-rgb/ui/server.js`
+   * `WorkingDirectory=/home/pi/wled-ha-rgb/ui/`
 2. Copy the `wled-ha-rgb.service` to `/etc/systemd/system`
 3. Run this command: `sudo systemctl start wled-ha-rgb`
 4. And then this to make sure it starts with the system: `sudo systemctl enable wled-has-rgb`
