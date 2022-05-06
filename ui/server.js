@@ -182,7 +182,9 @@ startWSServer = (start) => {
             
             connection.on('message', function(message) {
                 console.log(message);
+                
             });
+            connection.sendUTF(JSON.stringify(wled_ha_rgb.getState()));
             wled_ha_rgb.events.on("entitydata", entityDataCB);
             
             globalconnections = connection;

@@ -332,10 +332,15 @@ restart = () => {
   }
 }
 
+getState = () => {
+  return { devices: config.devices };
+};
+
 module.exports = { 
   main: main, 
   shutdown: shutdown,
   events: null,
   restart: restart,
-  running: false
+  running: false,
+  getState: getState
 };

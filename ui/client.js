@@ -47,7 +47,8 @@ document.onreadystatechange = () => {
                     config.devices.push({
                         id: id,
                         entity: matched_entity,//device_inp.value,
-                        color: [0,0,0]
+                        color: [0,0,0],
+                        brightness: 0
                     })
                 }
 
@@ -87,8 +88,6 @@ getConfig = () => {
             document.getElementById("wled_http_port").value =  config.rest_port;
             document.getElementById("debug").checked = config.debug;    
             document.getElementById("hass_token").value = config.hass.token;
-
-            showDebug(config.debug);
 
             getEntities();
         }
@@ -130,7 +129,7 @@ showDebug = (show) => {
         debug_container.innerHTML = `Debug Data:<BR><table><tr><th style="width:200px; text-align:start;">Device</th><th style="width:100px; text-align:start;">RGB</th><th style="width:200px; text-align:start;">Brightness</th></tr>${log}</table>`;
     }
     if(show) {
-        const websocket = new WebSocket(`ws://${window.location.hostname}:3298`);
+        websocket = new WebSocket(`ws://${window.location.hostname}:3298`);
         websocket.addEventListener("open", function (event) {
             console.log("Socket opened.");
         });
@@ -157,6 +156,7 @@ getEntities = () => {
             var device_container = document.getElementById("device_container");
             if(entities.length > 0) {
                 addLog("HASS Entities Retrieved!");
+                showDebug(config.debug);
                 device_container.innerHTML = "";
                 device_counter = 0; 
                 if(config.devices) {
